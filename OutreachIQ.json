@@ -1,0 +1,1431 @@
+{
+  "name": "OutreachIQ",
+  "nodes": [
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=={{ JSON.stringify($json.body.organization) }}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "builtInTools": {},
+        "options": {
+          "systemMessage": "You are a B2B sponsorship lead-scoring analyst for E-Cell IIT Madras, the entrepreneurship cell of IIT Madras. You evaluate companies as potential sponsors for our flagship entrepreneurship summit, which reaches a high-value audience of students, founders, investors, and recruiters at one of India's top engineering institutes.  You receive enriched company data from Apollo.io. Score the company's fit as a sponsor as HIGH, MEDIUM, or LOW based on: - Employee count and revenue (larger, funded companies have sponsorship budgets) - Industry relevance (tech, SaaS, fintech, consumer/D2C, consulting, recruiting,   and edtech score higher — they benefit from campus brand-building and   recruiting access) - Recent funding or growth signals (recently funded startups spend on visibility) - Likelihood of wanting access to a premier student and recruiting audience  Return ONLY a valid JSON object, no markdown, no prose, in exactly this shape: {   \"score\": \"HIGH\" | \"MEDIUM\" | \"LOW\",   \"reasoning\": \"<1-2 sentences citing the specific data points that drove the score>\",   \"talking_points\": [\"<2-3 short angles for a cold email, tailored to this company>\"] }  Rules: - Base the score only on data provided. If a field is missing, do not assume;   weight what you have. - Output nothing except the JSON object."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        3424,
+        944
+      ],
+      "id": "cae98817-6420-45a7-afcb-7d0b054c1cb7",
+      "name": "Message a model",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "maxTries": 2,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "XSDTq7NuEREse37J",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "==Company: {{ $json.company.name }}\nIndustry: {{ $json.company.industry }}\nEmployees: {{ $json.company.estimated_num_employees }}\nLead score: {{ $json.score }}\nWhy they fit: {{ $json.reasoning }}\nSuggested angles: {{ JSON.stringify($json.talking_points) }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "systemMessage": "You are an expert B2B outreach copywriter for E-Cell IIT Madras, the entrepreneurship cell of IIT Madras. You write concise, personalized cold sponsorship emails inviting companies to sponsor our flagship entrepreneurship summit.  Value to a sponsor: direct access to a high-intent community of students, early-stage founders, investors, and recruiters at one of India's most selective engineering institutes — strong for brand-building, recruiting, and product adoption among future builders.  You receive a company's name, industry, size, lead score, why they fit, and suggested angles. Write a cold email that: - Opens with a specific, genuine reason for reaching out to THIS company (use   the angles and fit reasoning — never generic flattery). - States the sponsorship opportunity and concrete value to them in 1-2 sentences. - Has a clear, low-friction call to action (a short call). - Is 110-160 words, warm and professional, not stiff or salesy. - Uses square-bracket placeholders for anything you must NOT invent:   [Your Name], [Event Name], [Event Dates], [sponsorship deck link].   Never fabricate specific dates, numbers, or names.  Also write a subject line under 60 characters — specific, not clickbait.  Return ONLY a valid JSON object, no markdown, no prose, in exactly this shape: {   \"subject\": \"<subject line>\",   \"body\": \"<email body, use \\n for line breaks>\" }"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        3440,
+        1232
+      ],
+      "id": "fac5acf6-3177-4ec3-b046-9a2dee163615",
+      "name": "Message a model1",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "maxTries": 2,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "XSDTq7NuEREse37J",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse Gemini's email JSON\nlet raw = $json.choices[0].message.content;\nraw = raw.replace(/```json/g, '').replace(/```/g, '').trim();\nconst email = JSON.parse(raw);\n\n// Carry the score data forward so logging + Gmail have everything in one place\nconst scoreData = $('Score Data').item.json;\n\nreturn {\n  subject: email.subject,\n  body: email.body,\n  score: scoreData.score,\n  reasoning: scoreData.reasoning,\n  talking_points: scoreData.talking_points,\n  company: scoreData.company\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1888,
+        0
+      ],
+      "id": "fedc7791-b53a-47ff-8f4e-fc71a4985c3c",
+      "name": "Email Data"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        144,
+        0
+      ],
+      "id": "58f3441f-4d6f-44d2-8bc0-4a16aa9328b6",
+      "name": "Manual Trigger"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "db5adeff-a9f7-436c-8e9e-4aae9d4487d8",
+              "name": "domain",
+              "value": "stripe.com",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        368,
+        0
+      ],
+      "id": "7975e967-d309-4e2c-812c-a8d00a11f896",
+      "name": "Test Domain"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Grab Gemini's text output\nlet raw = $json.choices[0].message.content;\n\n// Strip markdown fences if Gemini added them\nraw = raw.replace(/```json/g, '').replace(/```/g, '').trim();\n\n// Parse the JSON string into real fields\nconst parsed = JSON.parse(raw);\n\nreturn {\n  score: parsed.score,\n  reasoning: parsed.reasoning,\n  talking_points: parsed.talking_points,\n  // carry the company data forward for the email step\n  company: $('Apollo HTTP Request').item.json.body.organization\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1392,
+        0
+      ],
+      "id": "5183a3c9-de25-48ed-8c1a-cf104b9473b0",
+      "name": "Score Data"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1e8ThyDrpvg3TFZC2jStRJs_V25s8uKWY4WAPa4HPXtc/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1e8ThyDrpvg3TFZC2jStRJs_V25s8uKWY4WAPa4HPXtc/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $now.toISO() }}",
+            "Domain": "={{ \"\" + $json.company.primary_domain }}",
+            "Company": "={{ \"\" + $json.company.name }}",
+            "Industry": "={{ \"\" + $json.company.industry }}",
+            "Employees": "={{ \"\" + $json.company.estimated_num_employees }}",
+            "Score": "={{ \"\" + $json.score }}",
+            "Reasoning": "={{ \"\" + $json.reasoning }}",
+            "Email Subject": "={{ \"\" + $json.subject }}",
+            "Email Body": "={{ \"\" + $json.body }}",
+            "Status": "Pending"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Domain",
+              "displayName": "Domain",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Industry",
+              "displayName": "Industry",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Employees",
+              "displayName": "Employees",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Score",
+              "displayName": "Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Reasoning",
+              "displayName": "Reasoning",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email Subject",
+              "displayName": "Email Subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email Body",
+              "displayName": "Email Body",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2128,
+        0
+      ],
+      "id": "86fb72fc-f346-4bb5-92fc-f0baba28a208",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CCFqKIo6IdIyWKBl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "subject": "={{ $json['Email Subject'] }}",
+        "message": "={{ $json['Email Body'] }}",
+        "options": {
+          "sendTo": "dgoel.14106@gmail.com"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        912,
+        288
+      ],
+      "id": "0a1f065d-655d-4281-9346-11d10d3f0082",
+      "name": "Create a draft",
+      "webhookId": "bd398704-01a0-44db-8e9b-580900833004",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "NeuZNtRaRRYJ00Tv",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "enrich",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        112,
+        -288
+      ],
+      "id": "59e23998-6706-4254-b5b5-8aa0df7bc0c2",
+      "name": "Webhook",
+      "webhookId": "67ed268d-68a2-4a19-b1b7-3be384a83e35"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d591ce01-e523-4ba6-9da3-f3fee33d66bd",
+              "name": "domain",
+              "value": "={{ $json.body.text.trim().toLowerCase() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        528,
+        -288
+      ],
+      "id": "e81d5557-ec53-407f-8ef1-6ddeb647082d",
+      "name": "Slack Domain"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ response_type: \"ephemeral\", text: \"🔍 Enriching \" + $('Slack Domain').item.json.domain + \"… I'll post the lead score and draft to the channel shortly.\" }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        736,
+        -288
+      ],
+      "id": "cece7588-babe-46ef-ae61-0732780f4bb7",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "#sponsor-leads",
+          "mode": "name"
+        },
+        "messageType": "block",
+        "blocksUi": "={{ JSON.stringify([\n  { \"type\": \"header\", \"text\": { \"type\": \"plain_text\", \"text\": \"New Sponsor Lead 🎯\" } },\n  { \"type\": \"section\", \"fields\": [\n    { \"type\": \"mrkdwn\", \"text\": \"*Company:*\\n\" + $('Email Data').item.json.company.name },\n    { \"type\": \"mrkdwn\", \"text\": \"*Score:*\\n\" + $('Email Data').item.json.score }\n  ]},\n  { \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \"*Why:* \" + $('Email Data').item.json.reasoning } },\n  { \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \"*Draft Subject:* \" + $('Email Data').item.json.subject } },\n  { \"type\": \"actions\", \"elements\": [\n    { \"type\": \"button\", \"text\": { \"type\": \"plain_text\", \"text\": \"✅ Approve\" }, \"style\": \"primary\", \"action_id\": \"approve_lead\", \"value\": $('Email Data').item.json.company.primary_domain },\n    { \"type\": \"button\", \"text\": { \"type\": \"plain_text\", \"text\": \"🔄 Regenerate\" }, \"style\": \"danger\", \"action_id\": \"regenerate_lead\", \"value\": $('Email Data').item.json.company.primary_domain }\n  ]}\n]) }}",
+        "text": "=New sponsor lead: {{ $('Email Data').item.json.company.name }} — Score: {{ $('Email Data').item.json.score }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        3520,
+        1552
+      ],
+      "id": "1680e897-6cd0-41ff-afe5-1b93f26d32dc",
+      "name": "Send a message",
+      "webhookId": "8fb729e5-59de-4f52-bcb4-e5a1f48b6fe5",
+      "credentials": {
+        "slackApi": {
+          "id": "g6B9vUK43YmJiesu",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "slack-actions",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        112,
+        384
+      ],
+      "id": "406c619d-a748-47a9-8fa9-83c7973556f1",
+      "name": "Webhook1",
+      "webhookId": "aece33a4-3d46-4921-b90c-fc8a872814c5"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "76f601f7-02ab-4bb2-b87c-b056448989f8",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "approve_lead",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        544,
+        384
+      ],
+      "id": "773e7acf-6dea-487c-9bc7-c62d58ba2dcb",
+      "name": "Approve or Regenerate"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Parse Action').item.json.response_url }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  replace_original: true,\n  text: \"✅ *Approved* by @\" + $('Parse Action').item.json.user + \" — \" + $('Parse Action').item.json.domain + \" — Gmail draft created.\"\n}) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1248,
+        288
+      ],
+      "id": "4aeb49fe-9679-471d-809f-b91535e25b1a",
+      "name": "Confirm Approved"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Slack sends the click as a JSON string in body.payload\nconst payload = JSON.parse($json.body.payload);\n\nreturn {\n  action: payload.actions[0].action_id,        // \"approve_lead\" or \"regenerate_lead\"\n  domain: payload.actions[0].value,             // \"razorpay.com\"\n  user: payload.user.username,                  // who clicked\n  response_url: payload.response_url,           // to update the message\n  channel: payload.channel.id,\n  message_ts: payload.message.ts\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        336,
+        384
+      ],
+      "id": "9fb3180b-59f2-4914-a799-745ab40673d6",
+      "name": "Parse Action"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  model: \"llama-3.3-70b-versatile\",\n  response_format: { type: \"json_object\" },\n  messages: [\n    { role: \"system\", content: \"You are a B2B lead-scoring analyst for an organization seeking sponsors or partners. You evaluate companies as potential sponsorship or partnership leads based on enriched company data from Apollo.io. Score each company's fit as HIGH, MEDIUM, or LOW based on: company size and revenue (larger, well-funded companies have bigger budgets); industry relevance and likelihood of benefiting from this kind of partnership; recent funding or growth signals (recently funded companies often spend on visibility, brand, and outreach); and likelihood of wanting access to the organization's audience or network. Return ONLY a valid JSON object, no markdown, no prose, in exactly this shape: {\\\"score\\\": \\\"HIGH | MEDIUM | LOW\\\", \\\"reasoning\\\": \\\"1-2 sentences citing the specific data points that drove the score\\\", \\\"talking_points\\\": [\\\"2-3 short angles for a cold outreach email, tailored to this company\\\"]}. Rules: Base the score only on the data provided. If a field is missing, do not assume; weight what you have. Output nothing except the JSON object.\" },\n    { role: \"user\", content: JSON.stringify($json.trimmed) }\n  ]\n}) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1152,
+        0
+      ],
+      "id": "4ae3b8df-d073-4b48-88eb-9e3c2a738245",
+      "name": "Groq Scoring",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "FT0mVp43cDnvnaks",
+          "name": "Header Auth account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: \"llama-3.3-70b-versatile\", response_format: { type: \"json_object\" }, temperature: 0.8, max_tokens: 800, messages: [ { role: \"system\", content: \"You are a senior B2B partnerships copywriter writing cold sponsorship outreach. Your emails feel personally researched and human, never templated. RULES: (1) Open with ONE specific, concrete observation about THIS company drawn from the data provided (a recent funding round, a product, their market position) — never generic praise like 'impressive growth'. (2) In 1-2 sentences, connect that observation to a specific reason THIS company would benefit from the opportunity — tie it to their actual business. (3) State the opportunity and its concrete value (audience, brand, recruiting) crisply. (4) Close with a low-friction, specific call to action. (5) 130-170 words. Warm, confident, peer-to-peer — not salesy, not stiff, no buzzword soup. (6) Use the real sender details provided; never use bracket placeholders except [Name] for the unknown recipient. (7) Sign with sender name, title, and organization. Vary sentence length for natural rhythm. Format the body as clean paragraphs separated by a single \\n line break. Do NOT indent any line, do NOT add leading spaces, do NOT use double line breaks. Return ONLY valid JSON: {\\\"subject\\\":\\\"specific, under 60 chars, no clickbait\\\",\\\"body\\\":\\\"use \\\\n for line breaks\\\"}. Output nothing but the JSON.\" }, { role: \"user\", content: \"COMPANY DATA:\\nName: \" + $('Score Data').item.json.company.name + \"\\nIndustry: \" + $('Score Data').item.json.company.industry + \"\\nEmployees: \" + $('Score Data').item.json.company.estimated_num_employees + \"\\nLead score: \" + $('Score Data').item.json.score + \"\\nWhy they fit: \" + $('Score Data').item.json.reasoning + \"\\nAngles: \" + JSON.stringify($('Score Data').item.json.talking_points) + \"\\n\\nSENDER DETAILS (use directly, no placeholders):\\nOrganization: \" + $('Config').item.json.org_name + \"\\nSender: \" + $('Config').item.json.sender_name + \"\\nTitle: \" + $('Config').item.json.sender_title + \"\\nEvent: \" + $('Config').item.json.event_name + \"\\nEvent details: \" + $('Config').item.json.event_details + \"\\nAudience: \" + $('Config').item.json.audience_desc + \"\\nDeck: \" + $('Config').item.json.deck_link } ] }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1632,
+        0
+      ],
+      "id": "44084057-60b9-43a3-9f33-81f0528452d7",
+      "name": "Groq Email",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "FT0mVp43cDnvnaks",
+          "name": "Header Auth account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1e8ThyDrpvg3TFZC2jStRJs_V25s8uKWY4WAPa4HPXtc/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1e8ThyDrpvg3TFZC2jStRJs_V25s8uKWY4WAPa4HPXtc/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Domain",
+              "lookupValue": "={{ $('Parse Action').item.json.domain }}"
+            }
+          ]
+        },
+        "options": {
+          "returnFirstMatch": true
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        752,
+        288
+      ],
+      "id": "a7c121f6-aa4a-449d-ad07-cb477ed46f48",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CCFqKIo6IdIyWKBl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1e8ThyDrpvg3TFZC2jStRJs_V25s8uKWY4WAPa4HPXtc/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1e8ThyDrpvg3TFZC2jStRJs_V25s8uKWY4WAPa4HPXtc/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Domain": "={{ $('Parse Action').item.json.domain }}",
+            "Status": "Approved"
+          },
+          "matchingColumns": [
+            "Domain"
+          ],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Domain",
+              "displayName": "Domain",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Industry",
+              "displayName": "Industry",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Employees",
+              "displayName": "Employees",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Score",
+              "displayName": "Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Reasoning",
+              "displayName": "Reasoning",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email Subject",
+              "displayName": "Email Subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email Body",
+              "displayName": "Email Body",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1072,
+        288
+      ],
+      "id": "fdeec090-ec82-4619-8300-4d0dead215f2",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CCFqKIo6IdIyWKBl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1e8ThyDrpvg3TFZC2jStRJs_V25s8uKWY4WAPa4HPXtc/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1e8ThyDrpvg3TFZC2jStRJs_V25s8uKWY4WAPa4HPXtc/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Domain",
+              "lookupValue": "={{ $('Parse Action').item.json.domain }}"
+            }
+          ]
+        },
+        "options": {
+          "returnFirstMatch": true
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        752,
+        480
+      ],
+      "id": "14a2a9a2-e491-4686-bdf8-51583029d7c7",
+      "name": "Get row(s) in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CCFqKIo6IdIyWKBl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse the regenerated email from Groq\nlet raw = $json.choices[0].message.content;\nraw = raw.replace(/```json/g, '').replace(/```/g, '').trim();\nconst email = JSON.parse(raw);\n\n// Pull the lead's row data forward (from the Get Row node on this branch)\nconst row = $('Get row(s) in sheet1').item.json;\n\nreturn {\n  subject: email.subject,\n  body: email.body,\n  company: row.Company,\n  score: row.Score,\n  reasoning: row.Reasoning,\n  domain: row.Domain\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1168,
+        480
+      ],
+      "id": "02c8c7d2-36cf-456e-adc2-a0169750f5be",
+      "name": "Parse the re-draft"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: \"llama-3.3-70b-versatile\", response_format: { type: \"json_object\" }, temperature: 0.95, max_tokens: 800, messages: [ { role: \"system\", content: \"You are a senior B2B partnerships copywriter writing cold sponsorship outreach. Write a NOTICEABLY DIFFERENT version than any previous draft — change the opening, structure, and phrasing while keeping facts accurate. RULES: (1) Open with ONE specific, concrete observation about THIS company from the data — never generic praise like 'impressive growth'. (2) In 1-2 sentences, connect it to a specific reason THIS company would benefit. (3) State the opportunity and its concrete value crisply. (4) Close with a low-friction, specific call to action. (5) 130-170 words. Warm, confident, peer-to-peer, no buzzword soup. (6) Use the real sender details provided; no bracket placeholders except [Name] for the unknown recipient. (7) Sign with sender name, title, and organization. Vary sentence length for natural rhythm. Format the body as clean paragraphs separated by a single \\n line break. Do NOT indent any line, do NOT add leading spaces, do NOT use double line breaks. Return ONLY valid JSON: {\\\"subject\\\":\\\"specific, under 60 chars\\\",\\\"body\\\":\\\"use \\\\n for line breaks\\\"}. Output nothing but the JSON.\" }, { role: \"user\", content: \"COMPANY DATA:\\nName: \" + $json.Company + \"\\nIndustry: \" + $json.Industry + \"\\nLead score: \" + $json.Score + \"\\nWhy they fit: \" + $json.Reasoning + \"\\n\\nSENDER DETAILS (use directly, no placeholders):\\nOrganization: My_Organization\\nSender: Devansh Goel\\nTitle: Outreach Lead, My_Organization\\nEvent: Summit 2026\\nEvent details: Oct 2026, Bengaluru\\nAudience: students, founders, investors and recruiters\\nDeck: https://drive.google.com/file/d/1TzXBFPBKApUQHDpY1dHLagdBFkqH5XVz/view?usp=sharing\" } ] }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        960,
+        480
+      ],
+      "id": "7a6df1b7-47a0-426e-a918-becdd58c8de4",
+      "name": "Groq Re-draft",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "FT0mVp43cDnvnaks",
+          "name": "Header Auth account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1e8ThyDrpvg3TFZC2jStRJs_V25s8uKWY4WAPa4HPXtc/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1e8ThyDrpvg3TFZC2jStRJs_V25s8uKWY4WAPa4HPXtc/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Domain": "={{ $('Parse Action').item.json.domain }}",
+            "Status": "Regenerated",
+            "Email Subject": "={{ $('Parse the re-draft').item.json.subject }}",
+            "Email Body": "={{ $('Parse the re-draft').item.json.body }}"
+          },
+          "matchingColumns": [
+            "Domain"
+          ],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Domain",
+              "displayName": "Domain",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Industry",
+              "displayName": "Industry",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Employees",
+              "displayName": "Employees",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Score",
+              "displayName": "Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Reasoning",
+              "displayName": "Reasoning",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email Subject",
+              "displayName": "Email Subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email Body",
+              "displayName": "Email Body",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1376,
+        480
+      ],
+      "id": "54b4eae4-a126-424e-a41e-6897e971b25c",
+      "name": "Update row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CCFqKIo6IdIyWKBl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "=json",
+        "specifyBody": "=json",
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "jsonBody": "={{ JSON.stringify($json.slackBody) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1792,
+        480
+      ],
+      "id": "eade1ca2-1d74-4afd-a679-48c0b2af8fac",
+      "name": "Post Regenerated to Slack",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "XkeQWIgaDms98BbW",
+          "name": "Header Auth account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const org = $json.body.organization;\n\nreturn {\n  trimmed: {\n    name: org.name,\n    industry: org.industry,\n    employees: org.estimated_num_employees,\n    annual_revenue: org.annual_revenue_printed,\n    total_funding: org.total_funding_printed,\n    founded_year: org.founded_year,\n    description: org.short_description,\n    keywords: (org.keywords || []).slice(0, 10),\n    primary_domain: org.primary_domain\n  },\n  // keep the full org too, in case downstream needs it\n  fullOrg: org\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        0
+      ],
+      "id": "66109c90-a319-4f24-a5f3-8ccfa80a401b",
+      "name": "Trim Company Data"
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $('Parse the re-draft').item.json;\n\nreturn {\n  slackBody: {\n    channel: \"#sponsor-leads\",\n    text: \"Regenerated draft for \" + d.company,\n    blocks: [\n      { type: \"section\", text: { type: \"mrkdwn\", text: \"*Regenerated Draft — \" + d.company + \" (\" + d.score + \")*\" } },\n      { type: \"section\", text: { type: \"mrkdwn\", text: \"*Subject:* \" + d.subject } },\n      { type: \"section\", text: { type: \"mrkdwn\", text: \"*Email:*\\n\" + String(d.body).split(\"\\n\").map(l => l.trim()).filter(l => l).join(\"\\n\").slice(0, 2800) } },\n      { type: \"actions\", elements: [\n        { type: \"button\", text: { type: \"plain_text\", text: \"Approve\" }, style: \"primary\", action_id: \"approve_lead\", value: d.domain },\n        { type: \"button\", text: { type: \"plain_text\", text: \"Regenerate\" }, style: \"danger\", action_id: \"regenerate_lead\", value: d.domain }\n      ]}\n    ]\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1584,
+        480
+      ],
+      "id": "2d5aa8a4-ef8d-489c-9868-27d01323d5ee",
+      "name": "Build Regen Message"
+    },
+    {
+      "parameters": {
+        "url": "https://api.apollo.io/api/v1/organizations/enrich",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "domain",
+              "value": "={{ $json.domain }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        640,
+        0
+      ],
+      "id": "bd48d6b2-6a90-4fa9-90c8-52279486bf48",
+      "name": "Apollo HTTP Request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "LXYdSdi3ivEOZmRM",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  channel: \"#sponsor-leads\",\n  text: \"New sponsor lead: \" + $('Email Data').item.json.company.name + \" — Score: \" + $('Email Data').item.json.score,\n  blocks: [\n    { type: \"header\", text: { type: \"plain_text\", text: \"New Sponsor Lead\", emoji: true } },\n    { type: \"section\", fields: [\n      { type: \"mrkdwn\", text: \"*Company:*\\n\" + $('Email Data').item.json.company.name },\n      { type: \"mrkdwn\", text: \"*Score:*\\n\" + $('Email Data').item.json.score }\n    ]},\n    { type: \"section\", text: { type: \"mrkdwn\", text: \"*Why:* \" + $('Email Data').item.json.reasoning } },\n    { type: \"divider\" },\n    { type: \"section\", text: { type: \"mrkdwn\", text: \"*Subject:* \" + $('Email Data').item.json.subject } },\n    { type: \"section\", text: { type: \"mrkdwn\", text: \"*Draft Email:*\\n\" + $('Email Data').item.json.body.slice(0, 2800) } },\n    { type: \"divider\" },\n    { type: \"actions\", elements: [\n      { type: \"button\", text: { type: \"plain_text\", text: \"Approve\" }, style: \"primary\", action_id: \"approve_lead\", value: $('Email Data').item.json.company.primary_domain },\n      { type: \"button\", text: { type: \"plain_text\", text: \"Regenerate\" }, style: \"danger\", action_id: \"regenerate_lead\", value: $('Email Data').item.json.company.primary_domain }\n    ]}\n  ]\n}) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2336,
+        0
+      ],
+      "id": "6c1b40aa-5abe-4980-a97c-949d2ea0762e",
+      "name": "Post to Slack",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "XkeQWIgaDms98BbW",
+          "name": "Header Auth account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "76ff5a97-60b8-4be1-951b-61cf31de771c",
+              "name": "org_name",
+              "value": "My_Organization",
+              "type": "string"
+            },
+            {
+              "id": "394bdfa4-8e8d-4aeb-be92-fd1b9aa5839f",
+              "name": "sender_name",
+              "value": "Devansh Goel",
+              "type": "string"
+            },
+            {
+              "id": "2adfb2f0-4b49-4fe5-93fd-f127c3dca4ae",
+              "name": "sender_title ",
+              "value": "Head, My_Organization",
+              "type": "string"
+            },
+            {
+              "id": "3f7bd858-fc0d-4c29-8ff6-301c758cda92",
+              "name": "event_name",
+              "value": "Summit 2026",
+              "type": "string"
+            },
+            {
+              "id": "97aad008-2a15-4769-a5b0-3824be814637",
+              "name": "event_details  ",
+              "value": "Oct 2026, Bengaluru",
+              "type": "string"
+            },
+            {
+              "id": "72764d80-a085-44ef-bfb2-cafbdc47e255",
+              "name": "audience_desc ",
+              "value": "students, founders, investors, and recruiters ",
+              "type": "string"
+            },
+            {
+              "id": "3abd97bc-9c17-470a-aade-4c7107c881b6",
+              "name": "deck_link",
+              "value": "[your sponsorship deck URL, or leave a placeholder]",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        320,
+        -288
+      ],
+      "id": "d29da679-75c1-48e6-9076-43c3186e440a",
+      "name": "Config"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Message a model": {
+      "main": [
+        []
+      ]
+    },
+    "Message a model1": {
+      "main": [
+        []
+      ]
+    },
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Test Domain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Test Domain": {
+      "main": [
+        [
+          {
+            "node": "Apollo HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Score Data": {
+      "main": [
+        [
+          {
+            "node": "Groq Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Data": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Post to Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack Domain": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        [
+          {
+            "node": "Apollo HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a draft": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Parse Action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Approve or Regenerate": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get row(s) in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Action": {
+      "main": [
+        [
+          {
+            "node": "Approve or Regenerate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Scoring": {
+      "main": [
+        [
+          {
+            "node": "Score Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Email": {
+      "main": [
+        [
+          {
+            "node": "Email Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Create a draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Confirm Approved",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Groq Re-draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Re-draft": {
+      "main": [
+        [
+          {
+            "node": "Parse the re-draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse the re-draft": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Build Regen Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trim Company Data": {
+      "main": [
+        [
+          {
+            "node": "Groq Scoring",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Regen Message": {
+      "main": [
+        [
+          {
+            "node": "Post Regenerated to Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apollo HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Trim Company Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Slack Domain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "3535ea63-63cb-4155-85ca-38749ff2b03a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "16039428f2df0e35e2c1f1c0cb64ac03503ee02f49f337ffd7e939ee978492cb"
+  },
+  "id": "g4HgweyNu1JKNpm0",
+  "tags": []
+}
