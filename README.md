@@ -35,6 +35,20 @@ Approve     Regenerate
  status:Approved
 ```
 
+## See it in action
+
+**The pipeline (n8n):**
+
+![OutreachIQ workflow](screenshots/Workflow.png)
+
+**Slack approval card — Approve or Regenerate:**
+
+![Slack approval card](screenshots/Slack-card.png)
+
+**The resulting Gmail draft:**
+
+![Gmail draft](screenshots/E-Mail_Draft.png)
+
 The system **proposes**; a human **approves**. Nothing is sent automatically — every email is reviewed by a person before it leaves. The AI does the research, scoring, and drafting; the human stays in control of what actually goes out.
 
 ---
